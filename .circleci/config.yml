@@ -16,6 +16,6 @@ jobs:
           command: npm test
 
 workflows:
-  sample:
+  main:
     jobs:
       - build-and-test
