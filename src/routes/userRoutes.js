@@ -40,7 +40,8 @@ router.post("/add_information", validateToken, async (req, res) => {
 
   users[index].lastname = req.body.lastname;
   users[index].email = req.body.email;
-  users[index].address = req.body.address;
+  users[index].SSN = req.body.SSN;
+  users[index].birthday = req.body.birthday;
   users[index].phone = req.body.phone;
 
   res.status(201).send({ data: { users }, message: "Information updated" });
