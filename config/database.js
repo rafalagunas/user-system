@@ -9,7 +9,9 @@ const connectDatabase = () => {
       useUnifiedTopology: true,
       autoIndex: true,
     })
-    .then(() => console.log("MongoDB Conectada"))
+    .then(() => {
+      console.log("MongoDB Conectada");
+    })
     .catch((err) => console.log(err));
 };
 

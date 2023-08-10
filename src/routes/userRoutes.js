@@ -11,6 +11,13 @@ const router = express.Router();
 
 const UserModel = require("../models/User");
 
+// const Admin = new UserModel({
+//   username: "admin",
+//   password: "admin",
+//   isAdmin: true,
+// });
+// Admin.save();
+
 router.post("/admin", async (req, res) => {
   UserModel.findOne({
     $and: [
@@ -24,18 +31,21 @@ router.post("/admin", async (req, res) => {
       { isAdmin: req.body.isAdmin },
     ],
   })
-    .then((admin) => {
-      console.log(admin);
-      UserModel.find({})
-        .then((response) => {
-          console.log(response);
-          res.status(200).send({ users: response });
-        })
-        .catch((err) => {
-          res
-            .status(400)
-            .send({ message: "Error retrieving data", error: err });
-        });
+    .then(async (admin) => {
+      if (admin) {
+        await UserModel.find({})
+          .then((response) => {
+            console.log(response);
+            res.status(200).send({ users: response });
+          })
+          .catch((err) => {
+            res
+              .status(400)
+              .send({ message: "Error retrieving data", error: err });
+          });
+      } else {
+        res.status(400).send({ message: "Invalid credentials" });
+      }
     })
     .catch((err) => {
       res.status(400).send({ message: "Invalid credentials", error: err });
@@ -59,7 +69,6 @@ router.post("/create", async (req, res) => {
           password: data.password,
         },
       });
-      console.log(users);
     })
     .catch((err) => {
       console.log(err);
