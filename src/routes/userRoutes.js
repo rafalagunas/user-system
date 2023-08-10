@@ -11,14 +11,6 @@ const router = express.Router();
 
 const UserModel = require("../models/User");
 
-const users = [
-  {
-    username: "admin",
-    password: "admin",
-    user_type: "admin",
-  },
-];
-
 router.post("/admin", async (req, res) => {
   UserModel.findOne({
     $and: [
