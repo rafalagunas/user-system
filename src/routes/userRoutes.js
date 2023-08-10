@@ -5,6 +5,8 @@ const {
   generateRefreshToken,
   validateToken,
 } = require("../utils/jwt");
+
+const { validatePhoneNumber } = require("../services/numverify");
 const router = express.Router();
 
 const users = [];
@@ -34,17 +36,23 @@ router.post("/add_information", validateToken, async (req, res) => {
   if (user == null) res.status(404).send("User doesn't exists");
 
   console.log("USER", user);
-  const index = users.findIndex((obj) => {
-    return obj.username === user.username;
-  });
+  if (
+    (await validatePhoneNumber(req.body.phone)) &&
+    (await comparePassword(req.body.password, user.password)) === true
+  ) {
+    const index = users.findIndex((obj) => {
+      return obj.username === user.username;
+    });
 
-  users[index].lastname = req.body.lastname;
-  users[index].email = req.body.email;
-  users[index].SSN = req.body.SSN;
-  users[index].birthday = req.body.birthday;
-  users[index].phone = req.body.phone;
-
-  res.status(201).send({ data: { users }, message: "Information updated" });
+    users[index].lastname = req.body.lastname;
+    users[index].email = req.body.email;
+    users[index].SSN = req.body.SSN;
+    users[index].birthday = req.body.birthday;
+    users[index].phone = req.body.phone;
+    res.status(201).send({ data: { users }, message: "Information updated" });
+  } else {
+    res.status(401).send({ message: "Invalid information" });
+  }
 });
 
 router.get("/validate_token", validateToken, async (req, res) => {
