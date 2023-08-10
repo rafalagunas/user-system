@@ -10,6 +10,7 @@ const { validatePhoneNumber } = require("../services/numverify");
 const router = express.Router();
 
 const UserModel = require("../models/User");
+const { retrieveAllUsers } = require("../controllers/userControllers");
 
 // const Admin = new UserModel({
 //   username: "admin",
@@ -19,16 +20,17 @@ const UserModel = require("../models/User");
 // Admin.save();
 
 router.post("/admin", async (req, res) => {
+  const { username, password, isAdmin } = req.body;
   UserModel.findOne({
     $and: [
       {
-        username: req.body.username,
+        username: username,
       },
       {
-        password: req.body.password,
+        password: password,
       },
 
-      { isAdmin: req.body.isAdmin },
+      { isAdmin: isAdmin },
     ],
   })
     .then(async (admin) => {
