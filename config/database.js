@@ -12,7 +12,7 @@ const connectDatabase = () => {
     .then(() => {
       console.log("MongoDB Conectada");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => console.error(err));
 };
 const closeDatabase = async () => {
   await mongoose.connection.dropDatabase();
