@@ -9,19 +9,47 @@ const {
 const { validatePhoneNumber } = require("../services/numverify");
 const router = express.Router();
 
-const users = [];
+const users = [
+  {
+    username: "admin",
+    password: "admin",
+    user_type: "admin",
+  },
+];
+
+router.post("/admin", async (req, res) => {
+  const user = users.find((x) => x.username == req.body.username);
+  if (user == null) res.status(404).send("User doesn't exists");
+
+  console.log("USER", user);
+  if (
+    (req.body.password === user.password) === true &&
+    user.username === "admin"
+  ) {
+    res.status(200).send({ users: users });
+  } else {
+    res.status(401).send("Check your Password");
+  }
+});
 
 router.post("/create", async (req, res) => {
   const user = req.body.username;
+
+  const userValidated = users.find((x) => x.username == req.body.username);
+  if (userValidated != null) res.status(404).send("User already exists");
   const hashedPassword = await hashPassword(req.body.password);
   users.push({ username: user, password: hashedPassword });
-  res.status(201).send(users);
+  res.status(201).send({
+    message: "user created",
+    data: { username: user, password: hashedPassword },
+  });
   console.log(users);
 });
 
 router.post("/login", async (req, res) => {
   const user = users.find((x) => x.username == req.body.username);
   if (user == null) res.status(404).send("User doesn't exists");
+
   if ((await comparePassword(req.body.password, user.password)) === true) {
     const accessToken = generateAccessToken({ user: req.body.username });
     const refreshToken = generateRefreshToken({ user: req.body.username });
@@ -49,14 +77,16 @@ router.post("/add_information", validateToken, async (req, res) => {
     users[index].SSN = req.body.SSN;
     users[index].birthday = req.body.birthday;
     users[index].phone = req.body.phone;
-    res.status(201).send({ data: { users }, message: "Information updated" });
+    res
+      .status(201)
+      .send({ data: { ...users[index] }, message: "Information updated" });
   } else {
     res.status(401).send({ message: "Invalid information" });
   }
 });
 
 router.get("/validate_token", validateToken, async (req, res) => {
-  res.send(`successfully accessed post`);
+  res.send(`Token is valid`);
 });
 
 module.exports = router;
