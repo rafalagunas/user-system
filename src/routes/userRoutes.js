@@ -9,6 +9,8 @@ const {
 const { validatePhoneNumber } = require("../services/numverify");
 const router = express.Router();
 
+const UserModel = require("../models/User");
+
 const users = [
   {
     username: "admin",
@@ -18,71 +20,113 @@ const users = [
 ];
 
 router.post("/admin", async (req, res) => {
-  const user = users.find((x) => x.username == req.body.username);
-  if (user == null) res.status(404).send("User doesn't exists");
+  UserModel.findOne({
+    $and: [
+      {
+        username: req.body.username,
+      },
+      {
+        password: req.body.password,
+      },
 
-  console.log("USER", user);
-  if (
-    (req.body.password === user.password) === true &&
-    user.username === "admin"
-  ) {
-    res.status(200).send({ users: users });
-  } else {
-    res.status(401).send("Check your Password");
-  }
+      { isAdmin: req.body.isAdmin },
+    ],
+  })
+    .then((admin) => {
+      console.log(admin);
+      UserModel.find({})
+        .then((response) => {
+          console.log(response);
+          res.status(200).send({ users: response });
+        })
+        .catch((err) => {
+          res
+            .status(400)
+            .send({ message: "Error retrieving data", error: err });
+        });
+    })
+    .catch((err) => {
+      res.status(400).send({ message: "Invalid credentials", error: err });
+    });
 });
 
 router.post("/create", async (req, res) => {
   const user = req.body.username;
 
-  const userValidated = users.find((x) => x.username == req.body.username);
-  if (userValidated != null) res.status(404).send("User already exists");
   const hashedPassword = await hashPassword(req.body.password);
-  users.push({ username: user, password: hashedPassword });
-  res.status(201).send({
-    message: "user created",
-    data: { username: user, password: hashedPassword },
-  });
-  console.log(users);
+  const newUser = new UserModel({ username: user, password: hashedPassword });
+  newUser
+    .save()
+    .then((data) => {
+      console.log("guardado", data);
+      res.status(201).send({
+        message: "user created",
+        data: {
+          _id: data._id,
+          username: data.username,
+          password: data.password,
+        },
+      });
+      console.log(users);
+    })
+    .catch((err) => {
+      console.log(err);
+      res
+        .status(404)
+        .send({ message: `username ${err.keyValue.username} already exists!` });
+    });
 });
 
 router.post("/login", async (req, res) => {
-  const user = users.find((x) => x.username == req.body.username);
-  if (user == null) res.status(404).send("User doesn't exists");
-
-  if ((await comparePassword(req.body.password, user.password)) === true) {
-    const accessToken = generateAccessToken({ user: req.body.username });
-    const refreshToken = generateRefreshToken({ user: req.body.username });
-    res.json({ accessToken: accessToken, refreshToken: refreshToken });
-  } else {
-    res.status(401).send("Check your Password");
-  }
+  UserModel.findOne({ username: req.body.username })
+    .then(async (user) => {
+      console.log(user);
+      if ((await comparePassword(req.body.password, user.password)) === true) {
+        const accessToken = generateAccessToken({ user: req.body.username });
+        const refreshToken = generateRefreshToken({ user: req.body.username });
+        res.status(200).send({
+          message: "login successfully",
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        });
+      } else {
+        res.status(404).send("Check your Password");
+      }
+    })
+    .catch((err) => {
+      res.status(404).send("Invalid credentials");
+    });
 });
 
 router.post("/add_information", validateToken, async (req, res) => {
-  const user = users.find((x) => x.username == req.body.username);
-  if (user == null) res.status(404).send("User doesn't exists");
-
-  console.log("USER", user);
-  if (
-    (await validatePhoneNumber(req.body.phone)) &&
-    (await comparePassword(req.body.password, user.password)) === true
-  ) {
-    const index = users.findIndex((obj) => {
-      return obj.username === user.username;
-    });
-
-    users[index].lastname = req.body.lastname;
-    users[index].email = req.body.email;
-    users[index].SSN = req.body.SSN;
-    users[index].birthday = req.body.birthday;
-    users[index].phone = req.body.phone;
-    res
-      .status(201)
-      .send({ data: { ...users[index] }, message: "Information updated" });
-  } else {
-    res.status(401).send({ message: "Invalid information" });
-  }
+  const { lastname, email, SSN, birthday, phone } = req.body;
+  UserModel.findOne({ username: req.body.username }).then(async (user) => {
+    if ((await comparePassword(req.body.password, user.password)) === true) {
+      console.log(user);
+      if (
+        (await validatePhoneNumber(req.body.phone)) &&
+        (await comparePassword(req.body.password, user.password)) === true
+      ) {
+        UserModel.findOneAndUpdate(
+          { _id: user._id },
+          {
+            lastname: lastname,
+            email: email,
+            SSN: SSN,
+            birthday: birthday,
+            phone: phone,
+          }
+        ).then((user) => {
+          console.log("User updated", user);
+          res.status(200).send({ message: "Information updated", user: user });
+        });
+      } else {
+        res.status(401).send({ message: "Invalid information" });
+      }
+    } else {
+      res.status(404).send("Invalid credentials");
+    }
+  });
 });
 
 router.get("/validate_token", validateToken, async (req, res) => {
