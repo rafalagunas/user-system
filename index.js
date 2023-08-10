@@ -7,8 +7,8 @@ const HOST = process.env.HOST;
 const app = express();
 
 const userRoutes = require("./src/routes/userRoutes");
-const connectDb = require("./config/database");
-connectDb();
+const { connectDatabase } = require("./config/database");
+connectDatabase();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

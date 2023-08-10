@@ -14,5 +14,9 @@ const connectDatabase = () => {
     })
     .catch((err) => console.log(err));
 };
+const closeDatabase = async () => {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+};
 
-module.exports = connectDatabase;
+module.exports = { connectDatabase, closeDatabase };
