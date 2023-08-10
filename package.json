@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "nodemon index.js",
+    "populate-database": "mongosh --file config/database-seed.js",
     "test": "jest --watchAll --detectOpenHandles --verbose ./tests"
   },
   "keywords": [],

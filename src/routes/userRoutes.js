@@ -10,14 +10,6 @@ const { validatePhoneNumber } = require("../services/numverify");
 const router = express.Router();
 
 const UserModel = require("../models/User");
-const { retrieveAllUsers } = require("../controllers/userControllers");
-
-// const Admin = new UserModel({
-//   username: "admin",
-//   password: "admin",
-//   isAdmin: true,
-// });
-// Admin.save();
 
 router.post("/admin", async (req, res) => {
   const { username, password, isAdmin } = req.body;
