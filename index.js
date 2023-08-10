@@ -8,6 +8,7 @@ const app = express();
 
 const userRoutes = require("./src/routes/userRoutes");
 const { connectDatabase } = require("./config/database");
+const { initializeAdmin } = require("./src/controllers/userControllers");
 connectDatabase();
 
 app.use(express.json());

@@ -18,15 +18,11 @@ router.post("/admin", async (req, res) => {
       {
         username: username,
       },
-      {
-        password: password,
-      },
-
       { isAdmin: isAdmin },
     ],
   })
     .then(async (admin) => {
-      if (admin) {
+      if (await comparePassword(req.body.password, admin.password)) {
         await UserModel.find({})
           .then((response) => {
             console.log(response);
@@ -49,27 +45,55 @@ router.post("/admin", async (req, res) => {
 router.post("/create", async (req, res) => {
   const user = req.body.username;
 
-  const hashedPassword = await hashPassword(req.body.password);
-  const newUser = new UserModel({ username: user, password: hashedPassword });
-  newUser
-    .save()
-    .then((data) => {
-      console.log("guardado", data);
-      res.status(201).send({
-        message: "user created",
-        data: {
-          _id: data._id,
-          username: data.username,
-          password: data.password,
-        },
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      res
-        .status(404)
-        .send({ message: `username ${err.keyValue.username} already exists!` });
+  if (process.env.PASS_PHRASE === req.body.invite_code) {
+    const hashedPassword = await hashPassword(req.body.password);
+    const newUser = new UserModel({
+      username: user,
+      password: hashedPassword,
+      isAdmin: true,
     });
+    newUser
+      .save()
+      .then((data) => {
+        console.log("guardado", data);
+        res.status(201).send({
+          message: "user created",
+          data: {
+            _id: data._id,
+            username: data.username,
+            password: data.password,
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).send({
+          message: `username ${err.keyValue.username} already exists!`,
+        });
+      });
+  } else {
+    const hashedPassword = await hashPassword(req.body.password);
+    const newUser = new UserModel({ username: user, password: hashedPassword });
+    newUser
+      .save()
+      .then((data) => {
+        console.log("guardado", data);
+        res.status(201).send({
+          message: "user created",
+          data: {
+            _id: data._id,
+            username: data.username,
+            password: data.password,
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).send({
+          message: `username ${err.keyValue.username} already exists!`,
+        });
+      });
+  }
 });
 
 router.post("/login", async (req, res) => {
