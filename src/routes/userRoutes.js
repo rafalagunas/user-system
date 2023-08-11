@@ -43,6 +43,7 @@ router.post("/admin", async (req, res) => {
 });
 
 router.post("/create", async (req, res) => {
+  console.log(req.body);
   const user = req.body.username;
 
   if (process.env.PASS_PHRASE === req.body.invite_code) {
@@ -67,7 +68,7 @@ router.post("/create", async (req, res) => {
       })
       .catch((err) => {
         console.log(err);
-        res.status(404).send({
+        res.status(401).send({
           message: `username ${err.keyValue.username} already exists!`,
         });
       });
@@ -89,7 +90,7 @@ router.post("/create", async (req, res) => {
       })
       .catch((err) => {
         console.log(err);
-        res.status(404).send({
+        res.status(401).send({
           message: `username ${err.keyValue.username} already exists!`,
         });
       });
@@ -122,10 +123,7 @@ router.post("/add_information", validateToken, async (req, res) => {
   UserModel.findOne({ username: req.body.username }).then(async (user) => {
     if ((await comparePassword(req.body.password, user.password)) === true) {
       console.log(user);
-      if (
-        (await validatePhoneNumber(req.body.phone)) &&
-        (await comparePassword(req.body.password, user.password)) === true
-      ) {
+      if ((await comparePassword(req.body.password, user.password)) === true) {
         UserModel.findOneAndUpdate(
           { _id: user._id },
           {
@@ -135,10 +133,16 @@ router.post("/add_information", validateToken, async (req, res) => {
             birthday: birthday,
             phone: phone,
           }
-        ).then((user) => {
-          console.log("User updated", user);
-          res.status(200).send({ message: "Information updated", user: user });
-        });
+        )
+          .then((user) => {
+            console.log("User updated", user);
+            res
+              .status(200)
+              .send({ message: "Information updated", user: user });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       } else {
         res.status(401).send({ message: "Invalid information" });
       }
