@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const url = "mongodb://mongo:27017/user-system";
+const url = "mongodb://mongo:27017/user-system?directConnection=true";
 
 const connectDatabase = () => {
   mongoose
