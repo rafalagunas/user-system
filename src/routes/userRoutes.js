@@ -57,7 +57,7 @@ router.post("/create", async (req, res) => {
       .then((data) => {
         console.log("guardado", data);
         res.status(201).send({
-          message: "user created",
+          message: "admin user created",
           data: {
             _id: data._id,
             username: data.username,
